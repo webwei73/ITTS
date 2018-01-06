@@ -39,13 +39,13 @@ CA服务机构的存在是做为公认的第三方来验证服务器身份，这
 1. 安装过程
 ````
 mkdir /usr/src/getssl
-cd /usr/src/getsll
+cd /usr/src/getssl
 curl --silent https://raw.githubusercontent.com/srvrco/getssl/master/getssl > getssl ; chmod 700 getssl
 ````
 
 2. 生成基本配置
 ````
-cd /usr/src/getsll
+cd /usr/src/getssl
 ./getssl -c blackip.ustc.edu.cn
 ````
 3. 修改配置
@@ -64,6 +64,9 @@ ACL=('/var/www/html/.well-known/acme-challenge')
 DOMAIN_CERT_LOCATION="/etc/ssl/blackip.ustc.edu.cn.crt"
 DOMAIN_KEY_LOCATION="/etc/ssl/blackip.ustc.edu.cn.key"
 CA_CERT_LOCATION="/etc/ssl/chain.crt"
+
+#对于nginx, 需要full_chain.pem(其实这个文件就是blackip.ustc.edu.cn.crt + chain.crt)，可以使用
+#DOMAIN_CHAIN_LOCATION="/etc/ssl/blackip.ustc.edu.cn.full_chain.pem"
 
 RELOAD_CMD="/sbin/service httpd restart"
 ````
@@ -99,10 +102,22 @@ SSLCertificateChainFile /etc/ssl/chain.crt
 
 这时可以使用 https://www.ssllabs.com/ssltest/analyze.html?d=blackip.ustc.edu.cn 测试服务器证书是否工作正常。
 
+如果是nginx，配置是：
+```
+server {
+	listen 443 ssl;
+	server_name blackip.ustc.edu.cn;
+	ssl_certificate /etc/ssl/blackip.ustc.edu.cn.full_chain.pem;
+	ssl_certificate_key /etc/ssl/blackip.ustc.edu.cn.key;
+	location / {
+		root /usr/share/nginx/html;
+	}
+```
+
 6. 证书自动更新
 
 Let's encrypt证书有效期为90天，需要在90天内更新，更新方式是执行命令
-````/usr/src/get/ssl -d blackip.ustc.edu.cn````
+````/usr/src/getssl/getssl -d blackip.ustc.edu.cn````
 即可，离失效期还有30天的证书会得到更新，并自动执行上面定义的RELOAD_CMD启动服务进程。可以使用crontab每天执行一次。
 
 7. 一台服务器有多个域名时的证书生成
