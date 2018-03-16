@@ -61,7 +61,7 @@ Txt value:9ihDbjYfTExAYeDs4DBUeuTo18KBzwvTEjUnSwd32-c
 这时，修改DNS记录，增加
 
 ```
-_acme-challenge.ustc.edu.cn IN	TXT "9ihDbjYfTExAYeDs4DBUeuTo18KBzwvTEjUnSwd32-c"
+_acme-challenge.ustc.edu.cn. IN	TXT "9ihDbjYfTExAYeDs4DBUeuTo18KBzwvTEjUnSwd32-c"
 ```
 然后继续获取证书的过程，注意下面的命令行中的"renew"
 ```
