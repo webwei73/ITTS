@@ -1,5 +1,10 @@
 # 高校网络信息技术有关文档
 
+这里有大量的FTP文件，请参考 目录下的 files_list.txt
+
+   [FTP大量文档](FTP)
+
+
 1. 机房环境
     1. 门禁
     2. 精密空调
@@ -8,7 +13,7 @@
 2. 网络
     1. 网络防火墙([使用CentOS 7做NAT设备](network/nat/centos7/README.md))
     2. 路由器
-    3. 交换机
+    3. 交换机([2层交换机生成树TC事件的集中记录和处](network/switch/stptc/README.md), [交换机sflow抓包的简单说明](network/switch/sflow/README.md) )
     4. AC控制器([H3C AC/AP隐藏调试命令](network/wireless/h3c/README.md))
     5. VPN([通过互联网桥接2个以太网段](https://github.com/bg6cq/ethudp/blob/master/sample2/README.md), [
 OpenVPN的安装与部署（ldap进行身份认证+记录用户访问日志并发送邮件）](network/vpn/openvpn_ldap/README.md))
@@ -41,7 +46,7 @@ OpenVPN的安装与部署（ldap进行身份认证+记录用户访问日志并�
     2. nginx([nginx反向代理服务器](app/nginx/README.md), [nginx-rrd绘图参数](app/nginx/nginx-rrd/README.md), [Nginx 400错误案例](app/nginx/Cases.md))
     3. iis
     4. ftp
-    5. dns([自己建立根DNS服务器](app/dns/root/README.md), [为何DNS服务器要禁用连接跟踪](app/dns/whynoconntrack/README.md))
+    5. dns([自己建立根DNS服务器](app/dns/root/README.md), [为何DNS服务器要禁用连接跟踪](app/dns/whynoconntrack/README.md), [DNS服务器的iptables规则](app/dns/iptables/README.md))
     6. ntp([建立ntp服务器](app/ntp/README.md))
     7. dhcp([Linux下ISC dhcpd分配状态显示](app/dhcp/dhcpd-pool/README.md))
     8. [使用Nextcloud提供私有网盘服务](app/nextcloud/README.md)
