@@ -203,7 +203,7 @@ proxy_host传递给后台站点的主机头是 `p-www.ustc.edu.cn` ， 这样的
 
 其实过程很简单：
 
-* DNS解析全部执行Nginx服务器
+* DNS解析全部指向Nginx服务器
 
 * Nginx中写hosts文件，将这些域名指向后台服务器的ip
 
@@ -244,7 +244,7 @@ proxy_host传递给后台站点的主机头是 `p-www.ustc.edu.cn` ， 这样的
 	ssl_certificate /etc/letsencrypt/live/yousite/fullchain.pem;
 	ssl_certificate_key /etc/letsencrypt/live/yousite/privkey.pem;
 	ssl_session_timeout 5m;
-	add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+	add_header Strict-Transport-Security "max-age=31536000" always;
 ......
 ````
 此时，通过Nginx访问该站点，浏览器会自动将HTTP协议切换为HTTPS协议。
@@ -506,8 +506,102 @@ server {
 
 上面的例子只是抛砖引玉，nginx + lua 能实现十分丰富的功能，可以与数据库通讯，可以生成响应体，也可以发起新的请求，且能承载极大量的并发访问。甚至有许多公司使用这种方式构建复杂的商业服务。
 
-## 八、专业支持的系统
+## 八、CentOS 6.9 nginx支持http2
 
+参考 https://linwm.com/16.html
+
+CentOS 6.9 系统安装默认的nginx，由于openssl版本低，不支持http/2，使用如下步骤重新编译支持http/2的nginx，放在
+`/usr/local/nginx/sbin/nginx`，并将`/etc/init.d/nginx`中的可执行文件命令替换，系统的其他部分不做任何修改。
+
+```
+1. 准备
+yum update
+yum upgrade
+yum install -y patch libtool gcc gcc-c++ autoconf automake zlib zlib-devel pcre-devel make unzip git wget libxslt-devel
+
+2. 下载openssl
+cd /usr/src
+wget https://www.openssl.org/source/openssl-1.1.0h.tar.gz
+tar zxvf openssl-1.1.0h.tar.gz
+
+3. 下载 nginx 安装包
+cd /usr/src
+wget http://nginx.org/download/nginx-1.14.0.tar.gz
+tar zxvf nginx-1.14.0.tar.gz
+cd nginx-1.14.0
+
+4. 开始执行编译安装
+除了安装的位置，禁用perl、geoip，其余都是用系统默认
+./configure --prefix=/usr/local/nginx --with-openssl=/usr/src/openssl-1.1.0h  --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --http-client-body-temp-path=/var/lib/nginx/tmp/client_body --http-proxy-temp-path=/var/lib/nginx/tmp/proxy --http-fastcgi-temp-path=/var/lib/nginx/tmp/fastcgi --http-uwsgi-temp-path=/var/lib/nginx/tmp/uwsgi --http-scgi-temp-path=/var/lib/nginx/tmp/scgi --pid-path=/var/run/nginx.pid --lock-path=/var/lock/subsys/nginx --user=nginx --group=nginx --with-file-aio --with-ipv6 --with-http_ssl_module --with-http_v2_module --with-http_realip_module --with-http_addition_module --with-http_xslt_module=dynamic --with-http_image_filter_module=dynamic --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-http_gunzip_module --with-http_gzip_static_module --with-http_random_index_module --with-http_secure_link_module --with-http_degradation_module --with-http_slice_module --with-http_stub_status_module --with-mail=dynamic --with-mail_ssl_module --with-pcre --with-pcre-jit --with-stream=dynamic --with-stream_ssl_module --with-debug --with-cc-opt='-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic' --with-ld-opt=' -Wl,-E'
+
+make
+mkdir -p /usr/local/nginx/sbin/
+cp objs/nginx /usr/local/nginx/sbin
+
+vi /etc/init.d/nginx, 把
+nginx="/usr/sbin/nginx"
+修改为
+nginx="/usr/local/nginx/sbin/nginx"
+```
+
+## 九、平滑切换至https
+
+目前还有大约2%左右windows xp设备，这些设备对https支持有限，往往无法访问https网站，如果把所有http访问强制
+定向成https，会导致这些用户无法使用。
+
+为了解决平滑切换，可以采用如下方法：
+
+在nginx中配置如下，当访问/dummy_hsts时返回空内容，但是有个特殊的HTTP header: Strict-Transport-Security "max-age=604800"。
+
+```
+
+http {
+
+        map $scheme $hsts_header {
+                https   "max-age=604800";
+        }
+
+...
+
+server {
+	listen 80 ;
+	listen [::]:80 ;
+	listen 443 ssl http2;
+	listen [::]:443 ssl http2;
+	ssl_certificate /etc/nginx/ssl/ustcnet.ustc.edu.cn.pem;
+	ssl_certificate_key /etc/nginx/ssl/ustcnet.ustc.edu.cn.key;
+	ssl_session_cache shared:SSL:1m;
+	ssl_session_timeout  10m;
+	ssl_ciphers 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA';
+	ssl_prefer_server_ciphers on;
+	ssl_dhparam /etc/nginx/ssl/dhparam.pem;
+	server_name ustcnet.ustc.edu.cn;
+	access_log /var/log/nginx/host.ustcnet.ustc.edu.cn.access.log main;
+	add_header Strict-Transport-Security $hsts_header;
+	location / {
+		proxy_pass http://x.x.x.x/;
+	}
+	location /dummy_hsts {
+		return 200 "";
+	}
+}
+```
+
+在 http://ustcnet.ustc.edu.cn 的第一个页面增加如下代码
+```
+<iframe src="https://ustcnet.ustc.edu.cn/dummy_hsts" width="0" height="0" frameborder="0"></iframe>
+```
+
+其工作原理是：
+
+1. 浏览器访问 http://ustcnet.ustc.edu.cn 时，由于iframe会去访问https://ustcnet.ustc.edu.cn/dummy_hsts
+2. 如果访问https://ustcnet.ustc.edu.cn/dummy_hsts成功，会得到HTTP Header: Strict-Transport-Security "max-age=604800"
+3. 对于现代浏览器，在604800秒，即7天内对http://ustcnet.ustc.edu.cn的访问，都会强制使用https
+4. 对于每次https访问，都会返回HTTP Header: Strict-Transport-Security "max-age=604800"，也就是只要7天内访问过，一直会用https
+
+如果经测试工作稳定，可以将上面的604800换成一个足够大的值。
+
+## 十、专业支持的系统
 
 如果觉得以上操作太麻烦，强烈建议购买专业支持的系统，运行起来省事省心，界面高大上，如网瑞达的产品除了提供反向代理外，还提供了VPN等更多功能：
 

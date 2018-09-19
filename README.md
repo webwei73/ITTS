@@ -42,11 +42,11 @@ OpenVPN的安装与部署（ldap进行身份认证+记录用户访问日志并�
 6. 中间件
     1. tomcat
 7. 应用系统
-    1. apache
-    2. nginx([nginx反向代理服务器](app/nginx/README.md), [nginx-rrd绘图参数](app/nginx/nginx-rrd/README.md), [Nginx 400错误案例](app/nginx/Cases.md))
+    1. apache([cenots 7 httpd 安装及安全加固](https://abanger.github.io/maintenance/2018/06/08/centos-7-httpd-security-reinforcement.html))
+    2. nginx([step-by-step install nginx反向代理服务器](https://github.com/bg6cq/nginx-install), [nginx反向代理服务器](app/nginx/README.md), [nginx-rrd绘图参数](app/nginx/nginx-rrd/README.md), [Nginx 400错误案例](app/nginx/Cases.md), [使用lua对反向代理做权限控制](https://github.com/bg6cq/nginxauth))
     3. iis
     4. ftp
-    5. dns([自己建立根DNS服务器](app/dns/root/README.md), [为何DNS服务器要禁用连接跟踪](app/dns/whynoconntrack/README.md), [DNS服务器的iptables规则](app/dns/iptables/README.md))
+    5. dns([自己建立根DNS服务器](app/dns/root/README.md), [为何DNS服务器要禁用连接跟踪](app/dns/whynoconntrack/README.md), [DNS服务器的iptables规则](app/dns/iptables/README.md), [git辅助DNS服务器的运行](app/dns/dns_with_git/README.md))
     6. ntp([建立ntp服务器](app/ntp/README.md))
     7. dhcp([Linux下ISC dhcpd分配状态显示](app/dhcp/dhcpd-pool/README.md))
     8. [使用Nextcloud提供私有网盘服务](app/nextcloud/README.md)
@@ -62,6 +62,7 @@ OpenVPN的安装与部署（ldap进行身份认证+记录用户访问日志并�
     9. [两步(多因素)认证原理及应用](security/mfa/README.md)
    10. [Top 20 OpenSSH Server Best Security Practices](https://www.cyberciti.biz/tips/linux-unix-bsd-openssh-server-best-practices.html)
     11. [使用Let's encrypt免费SSL证书/acme.sh](security/ssl/acme.sh/README.md)
+    12. [高校等保一级应用系统的管理模式探究](security/l1.md)
 
 9. 标杆文档
     1. [中山大学信息技术安全管理办法](http://info.sysu.edu.cn/node/160)
