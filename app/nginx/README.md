@@ -6,8 +6,9 @@
 **审计大学 吴鑫**  
 **西安财经学院 王伟**  
 **中国科学技术大学 高一凡**
+**西北农林科技大学 卞一帆**
 
-修改时间：2017.10.09
+修改时间：2019/04/03
 
 ## 一、反向代理服务器简介
 
@@ -47,9 +48,9 @@ ip route add 0/0 via 202.38.64.1 table 100
 ip route add 0/0 via 218.22.21.1 table 110
 ip route add 0/0 via 218.104.71.1 table 120
 
-ip route add from 202.38.64.2 table 100 pref 100
-ip route add from 218.22.21.2 table 110 pref 100
-ip route add from 218.104.71.2 table 120 pref 100
+ip rule add from 202.38.64.2 table 100 pref 100
+ip rule add from 218.22.21.2 table 110 pref 100
+ip rule add from 218.104.71.2 table 120 pref 100
 ````
 
 ## 三、nginx配置
@@ -93,6 +94,7 @@ http {
         proxy_buffer_size          4k;
         proxy_buffers              4 32k;
         proxy_busy_buffers_size    64k;
+	proxy_max_temp_file_size   0;
         proxy_temp_file_write_size 64k;
         proxy_temp_path            /var/nginx/proxy_temp;
         proxy_redirect     off;
@@ -135,20 +137,9 @@ http {
 }
 ````
 
-对于 CentoS7，启动nginx时 若出现出现错误: `setrlimit(RLIMIT_NOFILE, 10240) failed (1: Operation not permitted) `
 
-先查看目前系统的设定值
-`
-ulimit -n
-`
+请注意上面的`proxy_max_temp_file_size   0;`，这个配置禁止nginx写临时文件。如果不禁止，客户端并发来取几个大文件，nginx会从源服务器高速获取并写磁盘，很快占用大量磁盘空间和IO。
 
-若设定值太小，修改 /etc/security/limits.conf  
-vi /etc/security/limits.conf  
-加上或修改以下两行设定
-````
-* soft nofile 65535
-* hard nofile 65535
-````
 
 ## 四、后台站点配置
 
@@ -521,18 +512,18 @@ yum install -y patch libtool gcc gcc-c++ autoconf automake zlib zlib-devel pcre-
 
 2. 下载openssl
 cd /usr/src
-wget https://www.openssl.org/source/openssl-1.1.0h.tar.gz
-tar zxvf openssl-1.1.0h.tar.gz
+wget https://www.openssl.org/source/openssl-1.1.1.tar.gz
+tar zxvf openssl-1.1.1.tar.gz
 
 3. 下载 nginx 安装包
 cd /usr/src
-wget http://nginx.org/download/nginx-1.14.0.tar.gz
-tar zxvf nginx-1.14.0.tar.gz
-cd nginx-1.14.0
+wget http://nginx.org/download/nginx-1.14.1.tar.gz
+tar zxvf nginx-1.14.1.tar.gz
+cd nginx-1.14.1
 
 4. 开始执行编译安装
 除了安装的位置，禁用perl、geoip，其余都是用系统默认
-./configure --prefix=/usr/local/nginx --with-openssl=/usr/src/openssl-1.1.0h  --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --http-client-body-temp-path=/var/lib/nginx/tmp/client_body --http-proxy-temp-path=/var/lib/nginx/tmp/proxy --http-fastcgi-temp-path=/var/lib/nginx/tmp/fastcgi --http-uwsgi-temp-path=/var/lib/nginx/tmp/uwsgi --http-scgi-temp-path=/var/lib/nginx/tmp/scgi --pid-path=/var/run/nginx.pid --lock-path=/var/lock/subsys/nginx --user=nginx --group=nginx --with-file-aio --with-ipv6 --with-http_ssl_module --with-http_v2_module --with-http_realip_module --with-http_addition_module --with-http_xslt_module=dynamic --with-http_image_filter_module=dynamic --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-http_gunzip_module --with-http_gzip_static_module --with-http_random_index_module --with-http_secure_link_module --with-http_degradation_module --with-http_slice_module --with-http_stub_status_module --with-mail=dynamic --with-mail_ssl_module --with-pcre --with-pcre-jit --with-stream=dynamic --with-stream_ssl_module --with-debug --with-cc-opt='-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic' --with-ld-opt=' -Wl,-E'
+./configure --prefix=/usr/local/nginx --with-openssl=/usr/src/openssl-1.1.1  --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --http-client-body-temp-path=/var/lib/nginx/tmp/client_body --http-proxy-temp-path=/var/lib/nginx/tmp/proxy --http-fastcgi-temp-path=/var/lib/nginx/tmp/fastcgi --http-uwsgi-temp-path=/var/lib/nginx/tmp/uwsgi --http-scgi-temp-path=/var/lib/nginx/tmp/scgi --pid-path=/var/run/nginx.pid --lock-path=/var/lock/subsys/nginx --user=nginx --group=nginx --with-file-aio --with-ipv6 --with-http_ssl_module --with-http_v2_module --with-http_realip_module --with-http_addition_module --with-http_xslt_module=dynamic --with-http_image_filter_module=dynamic --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-http_gunzip_module --with-http_gzip_static_module --with-http_random_index_module --with-http_secure_link_module --with-http_degradation_module --with-http_slice_module --with-http_stub_status_module --with-mail=dynamic --with-mail_ssl_module --with-pcre --with-pcre-jit --with-stream=dynamic --with-stream_ssl_module --with-debug --with-cc-opt='-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic' --with-ld-opt=' -Wl,-E'
 
 make
 mkdir -p /usr/local/nginx/sbin/
