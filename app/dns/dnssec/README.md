@@ -89,6 +89,8 @@ ustc.edu.cn.		IN DS 19065 7 2 EBD1C6420F893D8FF9950ADBF896075D059006439419634128
 
 将这些内容发给edu.cn服务器管理员，添加后，访问`https://dnssec-analyzer.verisignlabs.com/ustc.edu.cn`能看到DNSSEC工作正常。
 
+![DNSSEC](img/dnssec.png)
+
 ## 修改域名zone文件的签名步骤
 
 一旦修改了域名zone文件，均要重复步骤三的过程，并重启bind。我们使用git pre-commit hook自动这个过程。
