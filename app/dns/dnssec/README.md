@@ -13,7 +13,7 @@ ustc.edu.cn 分了5个view，每个view有一个zone文件，因此有5个zone�
 
 由于使用的bind软件并不是最新，因此本文使用的方式不一定是最简单的方式。
 
-bind 大部分文件存放在 /var/named/chroot/var/named 目录，zone文件存放在 /var/named/chroot/var/named/zone 目录。
+bind 大部分文件存放在 /var/named/chroot/var/named 目录，zone文件存放在 /var/named/chroot/var/named/zones 目录。
 
 ## 步骤一：生成ZSK和KSK密钥
 
@@ -21,7 +21,7 @@ bind 大部分文件存放在 /var/named/chroot/var/named 目录，zone文件存
 cd /var/named/chroot/var/named
 dnssec-keygen -r /dev/urandom -3 ustc.edu.cn
 dnssec-keygen -f ksk -r /dev/urandom -3 ustc.edu.cn
-cp *.key zone
+cp *.key zones
 ```
 
 生成了4个文件：
@@ -32,7 +32,7 @@ Kustc.edu.cn.+007+19065.key
 Kustc.edu.cn.+007+19065.private
 ```
 
-由于zone文件放在/var/named/chroot/var/named/zone 目录下，为了后续方便，把 *.key 文件cp到zone目录下
+由于zone文件放在/var/named/chroot/var/named/zones 目录下，为了后续方便，把 *.key 文件cp到zones目录下
 
 ## 步骤二：在zone文件中增加key文件
 
