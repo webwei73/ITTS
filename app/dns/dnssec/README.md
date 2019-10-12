@@ -102,5 +102,71 @@ ustc.edu.cn.		IN DS 19065 7 2 EBD1C6420F893D8FF9950ADBF896075D059006439419634128
 30天内我们的DNS一定会有修改，因此不担心这个问题。
 
 
+## 自动在线签名
+
+bind 9.9之后支持在线签名，也就是bind服务器启动后自动进行签名，管理更简单。
+
+由于我们服务器上的bind比较老，升级到最新：
+
+```
+yum install -y openssl-dev libcap-devel
+wget https://downloads.isc.org/isc/bind9/9.14.6/bind-9.14.6.tar.gz
+tar zxvf bind-9.14.6.tar.gz 
+cd bind-9.14.6
+
+./configure                     \
+  --prefix=/usr --exec-prefix=/usr --bindir=/usr/bin                  \
+  --sbindir=/usr/sbin --sysconfdir=/etc --localstatedir=/var          \
+  --datadir=/usr/share --includedir=/usr/include --libdir=/usr/lib64  \
+  --libexecdir=/usr/libexec --sharedstatedir=/var/lib                 \
+  --mandir=/usr/share/man --infodir=/usr/share/info --with-libtool    \
+  --with-pic --disable-static --disable-isc-spnego   \
+  --enable-querytrace              \
+  --enable-fixed-rrset --enable-rpz-nsip --enable-rpz-nsdname         \
+  --with-dlopen=yes --with-dlz-filesystem=yes --without-python
+make
+make install
+```
+
+升级后执行service named configtest出现错误
+
+```entropy.c:26: fatal error: RAND_bytes(): error:24064064:lib(36):func(100):reason(100)
+/etc/init.d/named: line 285:  1652 Aborted                 /usr/sbin/named-checkconf $ckcf_options ${named_conf}
+```
+原因是/var/named/chroot/dev/下缺少文件 random urandom，执行
+```
+cd /dev
+tar cvf - *rand* | ( cd /var/named/chroot/dev; tar xvf -)
+```
+并修改 /var/named/chroot/var/named 的owner为named.named后正常
+
+我们使用的配置如下：
+
+```
+view "CHINANET" {
+   match-clients { CHINANET;};
+   allow-recursion { none; };
+   include "/etc/named.common.conf";
+   zone "ustc.edu.cn" in {
+	type master;
+	key-directory "/var/named";
+	file "zones/ustc.edu.cn.chinanet";
+	auto-dnssec maintain;
+	inline-signing yes;
+   };
+};
+```
+
+生成的key文件放在 /var/named 目录下
+
+使用在线签名的时候，需要注意以下问题：
+
+1. /var/named 目录对named可写
+
+2. /var/named/zones 目录对named可写，并且不能有前缀相同，多了 .signed 后缀的文件，因为bind运行时要写这样的文件。
+
+3. 如果有多个view，zone文件不能有名字相同的，原因是bind运行时签名写 .signed 文件时后面的view因为文件存在，会错误。
+
+
 ***
 欢迎 [加入我们整理资料](https://github.com/bg6cq/ITTS)
